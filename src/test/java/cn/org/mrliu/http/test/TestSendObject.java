@@ -1,6 +1,5 @@
 package cn.org.mrliu.http.test;
 
-import cn.org.mrliu.http.entity.KV;
 import cn.org.mrliu.http.entity.test.Account;
 import cn.org.mrliu.http.entity.test.Address;
 import cn.org.mrliu.http.entity.test.User;

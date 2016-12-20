@@ -1,9 +1,10 @@
 package cn.org.mrliu.http.entity;
 
-import cn.org.mrliu.http.callback.Callback;
-import javafx.geometry.Pos;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author MrLiu
@@ -14,17 +15,14 @@ public class Option implements Serializable {
     public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
     public static final String APPLICATION_JSON = "application/json";
     public static final String CONTENT_TYPE_DEFAULT = APPLICATION_X_WWW_FORM_URLENCODED;
-    public static final String GET = "GET";
-    public static final String POST = "POST";
-    public static final String TYPE_DEFAULT = GET;
+    public static final String GET = "get";
+    public static final String POST = "post";
 
-    public static final String JSON = "json";
-    public static final String XML = "xml";
-    public static final String SCRIPT = "script";
-    public static final String JSONP = "jsonp";
-    public static final String TEXT = "text";
-
-
+    public static final String DATA_TYPE_JSON = "json";
+    public static final String DATA_TYPE_XML = "xml";
+    public static final String DATA_TYPE_SCRIPT = "script";
+    public static final String DATA_TYPE_JSONP = "jsonp";
+    public static final String DATA_TYPE_TEXT = "text";
 
 
     public String url;                     // 路径
@@ -32,22 +30,42 @@ public class Option implements Serializable {
     public Object data;                    // 数据对象
     public String contentType = CONTENT_TYPE_DEFAULT;             // 内容类型
     public String dataType;                // 预期服务器返回的数据类型
-    public String headers;                 // 请求头信息
+    public Map<String,String> headers;     // 请求头信息
     public boolean async = false;         // 是否异步,默认为同步,true:异步
-    public Callback success;               // 成功回调
-    public Callback error;                 // 失败回调
 
     public Option() {
     }
 
-    public Option(String url, String type, Object data, String contentType, String dataType, String headers, Callback success) {
+    public Option(String url, Object data) {
+        this.url = url;
+        this.data = data;
+    }
+
+    public Option(String url, String type, Object data, String contentType, String dataType) {
+        this.url = url;
+        this.type = type;
+        this.data = data;
+        this.contentType = contentType;
+        this.dataType = dataType;
+    }
+
+    public Option(String url, String type, Object data, String contentType, String dataType, Map<String, String> headers) {
         this.url = url;
         this.type = type;
         this.data = data;
         this.contentType = contentType;
         this.dataType = dataType;
         this.headers = headers;
-        this.success = success;
+    }
+
+    public Option(String url, String type, Object data, String contentType, String dataType, Map<String, String> headers, boolean async) {
+        this.url = url;
+        this.type = type;
+        this.data = data;
+        this.contentType = contentType;
+        this.dataType = dataType;
+        this.headers = headers;
+        this.async = async;
     }
 
     public String getUrl() {
@@ -55,7 +73,10 @@ public class Option implements Serializable {
     }
 
     public void setUrl(String url) {
-        this.url = url;
+        if (StringUtils.isBlank(url)){
+            return;
+        }
+        this.url = url.trim();
     }
 
     public String getType() {
@@ -63,7 +84,10 @@ public class Option implements Serializable {
     }
 
     public void setType(String type) {
-        this.type = type;
+        if (StringUtils.isBlank(type)){
+            return;
+        }
+        this.type = type.trim();
     }
 
     public Object getData() {
@@ -79,7 +103,10 @@ public class Option implements Serializable {
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+        if (StringUtils.isBlank(contentType)){
+            return;
+        }
+        this.contentType = contentType.trim();
     }
 
     public String getDataType() {
@@ -87,30 +114,41 @@ public class Option implements Serializable {
     }
 
     public void setDataType(String dataType) {
-        this.dataType = dataType;
+        if (StringUtils.isBlank(dataType)){
+            return;
+        }
+        this.dataType = dataType.trim();
     }
 
-    public String getHeaders() {
+    public Map<String, String> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(String headers) {
+    public void setHeaders(Map<String, String> headers) {
+        if (MapUtils.isEmpty(headers)){
+            return;
+        }
         this.headers = headers;
     }
 
-    public Callback getSuccess() {
-        return success;
+    public boolean isAsync() {
+        return async;
     }
 
-    public void setSuccess(Callback success) {
-        this.success = success;
+    public void setAsync(boolean async) {
+        this.async = async;
     }
 
-    public static void main(String[] args) {
-        Option option = new Option();
-        option.setSuccess((result) -> {
-
-        });
-
+    @Override
+    public String toString() {
+        return "Option{" +
+                "url='" + url + '\'' +
+                ", type='" + type + '\'' +
+                ", data=" + data +
+                ", contentType='" + contentType + '\'' +
+                ", dataType='" + dataType + '\'' +
+                ", headers=" + headers +
+                ", async=" + async +
+                '}';
     }
 }

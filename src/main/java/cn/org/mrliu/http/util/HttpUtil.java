@@ -1,5 +1,6 @@
 package cn.org.mrliu.http.util;
 
+import cn.org.mrliu.http.entity.FileOption;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -71,7 +72,7 @@ public class HttpUtil {
         return get(url,null);
     }
 
-    public static String get(String url,Map<String,Object> headers) throws Exception{
+    public static String get(String url,Map<String,String> headers) throws Exception{
         logger.debug("url:"+url);
         HttpGet httpGet = new HttpGet(url);
         setCommonRequestHeaders(httpGet);
@@ -90,7 +91,7 @@ public class HttpUtil {
         return getObject(url,object,null);
     }
 
-    public static String getObject(String url,Object object,Map<String,Object> headers) throws Exception{
+    public static String getObject(String url,Object object,Map<String,String> headers) throws Exception{
         List<NameValuePair> nameValuePairs = convertSerializeForm(object);
         String queryString = serializeQueryString(nameValuePairs);
         Integer questionMarkIndexOf = url.indexOf("?");
@@ -120,7 +121,7 @@ public class HttpUtil {
        return post(url,nameValuePairs,null);
     }
 
-    public static String post(String url, List<NameValuePair> nameValuePairs,Map<String,Object> headers) throws Exception{
+    public static String post(String url, List<NameValuePair> nameValuePairs,Map<String,String> headers) throws Exception{
         HttpPost httpPost = new HttpPost(url);
         setCommonRequestHeaders(httpPost);
         setRequestHeaders(httpPost,headers);
@@ -137,7 +138,7 @@ public class HttpUtil {
         return postObject(url,object,null);
     }
 
-    public static String postObject(String url,Object object,Map<String,Object> headers) throws Exception{
+    public static String postObject(String url,Object object,Map<String,String> headers) throws Exception{
         List<NameValuePair> nameValuePairs = convertSerializeForm(object);
         System.out.println(JSON.toJSONString(nameValuePairs,true));
         String string = serializeQueryString(nameValuePairs);
@@ -171,11 +172,11 @@ public class HttpUtil {
         return upload(url,formName,file,null);
     }
 
-    public static String upload(String url,String formName, File file,Map<String,Object> params){
+    public static String upload(String url,String formName, File file,Map<String,String> params){
         return upload(url,formName,file,params,null);
     }
 
-    public static String upload(String url,String formName, File file,Map<String,Object> params,Map<String,Object> headers){
+    public static String upload(String url,String formName, File file,Map<String,String> params,Map<String,String> headers){
         try {
             System.out.println("upload");
             System.out.println("url:"+url);
@@ -201,7 +202,7 @@ public class HttpUtil {
 
             // 构建参数
             if (MapUtils.isNotEmpty(params)){
-                for (Map.Entry<String,Object> entry : params.entrySet()){
+                for (Map.Entry<String,String> entry : params.entrySet()){
                     StringBody stringBody = new StringBody(String.valueOf(entry.getValue()), ContentType.TEXT_PLAIN);
                     multipartEntityBuilder.addPart(entry.getKey(),stringBody);
                 }
@@ -241,11 +242,90 @@ public class HttpUtil {
         return null;
     }
 
+
+    public static String upload(String url, List<FileOption> fileOptions) throws Exception{
+        return upload(url,fileOptions);
+    }
+
+    public static String upload(String url, List<FileOption> fileOptions, Map<String,Object> params) throws Exception{
+        return upload(url,fileOptions,params,null);
+    }
+
+    public static String upload(String url, List<FileOption> fileOptions, Map<String,Object> params, Map<String,String> headers) throws Exception{
+        try {
+            HttpPost httpPost = new HttpPost(url);
+
+            MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
+
+            if (CollectionUtils.isNotEmpty(fileOptions)){
+
+                for (FileOption fileOption : fileOptions){
+                    String formName = fileOption.getName();
+                    File file = fileOption.getFile();
+
+                    ContentType contentType = null;
+                    String contentTypeString = fileOption.getContentType();
+                    if (StringUtils.isNotBlank(contentTypeString)){
+                        contentTypeString = contentTypeString.trim();
+                        contentType = ContentType.create(contentTypeString,UTF8);
+                    }else{
+                        String fileName = file.getName();
+                        fileName = fileName.toLowerCase();
+                        if (fileName.endsWith(JPG) || fileName.endsWith(JPEG)){
+                            contentType = CONTENT_TYPE_IMAGE_JPEG;
+                        }else if (fileName.endsWith(PNG)){
+                            contentType = CONTENT_TYPE_IMAGE_PNG;
+                        }else if (fileName.endsWith(GIF)){
+                            contentType = CONTENT_TYPE_IMAGE_GIF;
+                        }
+                    }
+
+                    FileBody fileBody = new FileBody(file,contentType);
+
+                    multipartEntityBuilder.addPart(formName,fileBody);
+
+                }
+
+            }
+
+
+            // 构建参数
+            if (MapUtils.isNotEmpty(params)){
+                for (Map.Entry<String,Object> entry : params.entrySet()){
+                    StringBody stringBody = new StringBody(String.valueOf(entry.getValue()), ContentType.create("text/plain",UTF8));
+                    multipartEntityBuilder.addPart(entry.getKey(),stringBody);
+                }
+            }
+
+            HttpEntity httpEntity = multipartEntityBuilder.build();
+
+            httpPost.setEntity(httpEntity);
+
+            setCommonRequestHeaders(httpPost);
+            setRequestHeaders(httpPost,headers);
+
+            CloseableHttpResponse response = httpClient.execute(httpPost);
+            System.out.println("response status"+response.getStatusLine());
+            HttpEntity responseEntity = response.getEntity();
+            String result = EntityUtils.toString(responseEntity);
+            System.out.println("result:"+result);
+            EntityUtils.consume(responseEntity);
+            response.close();
+            return  result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+        }
+        return null;
+    }
+
+
+
     public static String postJson(String url, String data){
         return postJson(url,data,null);
     }
 
-    public static String postJson(String url, String data,Map<String,Object> headers){
+    public static String postJson(String url, String data,Map<String,String> headers){
         try {
             System.out.println("url:"+url);
             System.out.println("data:"+data);
@@ -257,6 +337,8 @@ public class HttpUtil {
             CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
             System.out.println("response status:"+httpResponse.getStatusLine());
             HttpEntity httpEntity = httpResponse.getEntity();
+            System.out.println("contentType:"+httpEntity.getContentType());
+
             String result = EntityUtils.toString(httpEntity);
             EntityUtils.consume(httpEntity);
             httpResponse.close();
@@ -276,12 +358,12 @@ public class HttpUtil {
         request.setHeader("X-Requested-With","XMLHttpRequest");
     }
 
-    public static void setRequestHeaders(HttpUriRequest request, Map<String,Object> headers){
+    public static void setRequestHeaders(HttpUriRequest request, Map<String,String> headers){
         if (MapUtils.isEmpty(headers)){
             return;
         }
-        for (Map.Entry<String,Object> entry : headers.entrySet()){
-            request.setHeader(entry.getKey(),String.valueOf(entry.getValue()));
+        for (Map.Entry<String,String> entry : headers.entrySet()){
+            request.setHeader(entry.getKey(),entry.getValue());
         }
     }
 
@@ -353,18 +435,13 @@ public class HttpUtil {
     }
 
     public static void main(String[] args) throws Exception{
-//        String result = upload("http://localhost:8080/api/upload/","file",new File("D:\\test.png"));
-//        System.out.println(result);
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("account","66123456");
-//        jsonObject.put("password","xxxxxxxxxxx");
-//        String result = postJson("http://localhost:8080/api/cpf/cd/account",jsonObject.toString());
-//        System.out.println(result);
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("account","66123456");
+        jsonObject.put("password","xxxxxxxxxxx");
+        String result = postJson("http://localhost:8080/api/cpf/cd/account",jsonObject.toString());
+        System.out.println(result);
 
-//        Map<String,Object> map = new HashMap<>();
-//        map.put("fileId",2);
-//        String result = upload("http://localhost:8080/api/upload/","file",new File("D:\\test.png"),map);
-//        System.out.println(result);
+
 
     }
 

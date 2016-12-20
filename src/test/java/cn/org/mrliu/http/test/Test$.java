@@ -43,13 +43,33 @@ public class Test$ {
         option.type = "POST";
         option.data = user;
         option.dataType = "json";
-        option.success = (result) ->{
-            System.out.println("xxx");
-        };
+
 
         JSONObject result = $.ajax(option);
         System.out.println("==========");
         System.out.println(JSON.toJSONString(result,true));
+
+
+        /**
+         *
+         * {
+         *     url : "",
+         *     type : "POST",
+         *     contentType : "mutipart/data",
+         *     files : [
+         *         {"pic" : file1},
+         *         {"pic" : file2},
+         *         {"pic" : file3},
+         *         {"pic" : file4}
+         *     ]
+         *
+         *
+         * }
+         *
+         *
+         *
+         */
+
     }
 
 }
