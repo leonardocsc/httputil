@@ -174,34 +174,4 @@ public class ${
         return null;
     }
 
-    public static void main(String[] args) throws Exception{
-//        Option globalOption = new Option();
-//        globalOption.setType("111111");
-//        globalOption.setContentType("22222222222");
-//        ajaxSetup(globalOption);
-
-        String keyword = "java";
-
-
-        Option option = new Option();
-        option.setUrl("https://www.baidu.com/s?ie=utf-8&wd="+keyword);
-        option.setType(Option.GET);
-
-        /**
-         * var option = {};
-         * option.url = "";
-         * option.data = "";
-         */
-
-        option.url = "";
-        option.data = "";
-
-
-        String result = $.ajax(option);
-
-
-
-        System.out.println(result);
-    }
-
 }
